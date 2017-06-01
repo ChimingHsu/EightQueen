@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>EightQueenGame</title>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<!--遊戲相關CSS 開始-->
+<style>
+	body{
+		background-image:url("body_bg3.jpg");
+		background-size:cover;
+	}
+	
+	.info{	
+		visibility:hidden;
+		font-size:30px;
+		width:30px;
+		height:30px;
+	}
+	
+	#board{
+		border: 1px solid black;
+		border-collapse: collapse;
+		background-image:url("bg1.jpg");
+		background-size:contain;
+	}
+	td , tr{
+		border: 1px solid #000;
+		height:60px;
+		width:60px;
+		color:red;
+		text-align:center;
+		font-size:35px;
+	}	
+	#opts{
+		text-align:center;
+		width:100%;
+		height:40px;
+		font-size:30px;
+		font-family:"Bodoni MT ";
+		color:#FFFFFF;
+		position: relative;
+	}
+	#showbox{
+		text-align:center; 
+	}
+	#choose{
+		width:100px;
+		height:40px;
+		font-size:20px;
+	}
+	#btn{
+		width:100px;
+		height:40px;
+		font-size:20px;
+	}
+</style>
+<!--遊戲相關CSS 結束-->
+
+<!--滑動圖片CSS 開始-->
+<style>
+	//源碼來自於w3c
+	* {box-sizing:border-box}
+
+	/* Slideshow container */
+	.slideshow-container {
+		max-width: 1000px;
+		position: relative;
+		margin: auto;
+	}
+
+	/* Caption text */
+	.text {
+		color: black;
+		font-size: 15px;
+		padding: 8px 12px;
+		position: absolute;
+		bottom: 8px;
+		width: 100%;
+		text-align: center;
+	}
+
+	/* Number text (1/3 etc) */
+	.numbertext {
+		color: #f2f2f2;
+		font-size: 12px;
+		padding: 8px 12px;
+		position: absolute;
+		top: 0;
+	}
+
+	/* The dots/bullets/indicators */
+	.dot {
+		height: 13px;
+		width: 13px;
+		margin: 0 2px;
+		background-color: #bbb;
+		border-radius: 50%;
+		display: inline-block;
+		transition: background-color 0.6s ease;
+	}
+
+	.active {
+		background-color: #717171;
+	}
+
+	/* Fading animation */
+	.fade {
+		-webkit-animation-name: fade;
+		-webkit-animation-duration: 1.5s;
+		animation-name: fade;
+		animation-duration: 1.5s;
+	}
+
+	@-webkit-keyframes fade {
+	from {opacity: .4}
+	to {opacity: 1}
+	}
+
+	@keyframes fade {
+	from {opacity: .4}
+	to {opacity: 1}
+	}
+
+	/* On smaller screens, decrease text size */
+	@media only screen and (max-width: 300px) {
+	.text {font-size: 11px}
+	}
+</style>
+<!--滑動圖片CSS 結束-->
+
+<!--遊戲的javascript 開始-->
+<script type="text/javascript">  
+	var tabObj;
+	var selObj;
+	var spanObj;
+	var headObj;
+	var bodyObj;
+	var timer;
+	var countCell=0;
+	var countQ=0;
+	
+	function init(){
+	showSlides();
+  	tabObj=document.getElementById("board");
+	selObj=document.getElementById("choose");
+	spanObj=document.getElementsByClassName("info");
+	headObj=document.getElementById("opts");
+	bodyObj=document.getElementsByTagName("body")[0];
+  	}
+
+	/*監控遊戲結果*/
+	function monitor(){
+		var cellLimit = Math.pow(tabObj.rows.length,2);
+		var QLimit = tabObj.rows.length;
+		if(countQ==QLimit){
+			clearInterval(timer);
+			alert("挑戰成功!");
+			creatBoard();
+		}else if(countCell==cellLimit){
+			clearInterval(timer);
+			alert("挑戰失敗...");
+			creatBoard();
+		}
+	}
+	
+	function reCover(r){
+		var check = r.getAttribute("title");
+		if(check=="o"){
+			r.style.backgroundColor='';
+		}
+	}
+	
+	function paint(p){
+		var check = p.getAttribute("title");
+		if(check=="o"){
+			p.style.backgroundColor='#FFD306';
+		}
+	}
+
+	/*清空棋盤*/
+	function clean(){
+		clearInterval(timer);
+		countCell=0;
+		countQ=0;
+		spanObj[1].innerHTML="0";
+		spanObj[3].innerHTML="0";
+		var rows;
+ 		while((rows = tabObj.rows.length)>0){;
+				tabObj.deleteRow(rows-1);
+				rows--;
+			}
+	}
+	
+	/*隱藏說明圖片*/
+	function toHideImg(){
+		var hideDiv1=document.getElementsByClassName("slideshow-container");
+		hideDiv1[0].style.display="none";
+		var hideDiv2=document.getElementsByClassName("caption_text");
+		hideDiv2[0].style.display="none";
+	}
+	
+	/*呈現統計資訊*/
+	function toShowInfo(){
+		for(var q = 0;q<spanObj.length;q++){
+			spanObj[q].style.visibility="visible";
+		}
+	}
+	
+	/*改變並初始化棋盤和建立事件處理器*/
+	function creatBoard(){
+		toHideImg();
+		clean();
+		toShowInfo();
+		var size = selObj.options[selObj.selectedIndex].value;
+		bodyObj.style.backgroundImage="url('body_bg.jpg')";
+		headObj.style.color="#000000";
+		spanObj[1].innerHTML="0";
+		spanObj[3].innerHTML=Math.pow(size,2);
+		
+		//畫表格
+		for(var i =0;i<size;i++){
+			var trs = document.createElement("TR");
+			trs.setAttribute("name", "tr");
+			tabObj.appendChild(trs);
+			
+			for(var j=0;j<size;j++){
+				var tds = document.createElement("TD");
+				tds.setAttribute("id", i*size+j);
+				document.getElementsByName("tr")[i].appendChild(tds);
+				
+				var singleTd = document.getElementById(i*size+j);
+				singleTd.setAttribute("onmouseover", "paint(this)");
+				singleTd.setAttribute("onMouseOut", "reCover(this)");
+				singleTd.setAttribute("onclick", "queenEffect(this)");
+				singleTd.setAttribute("title", "o");
+			}
+		}
+		timer=setInterval(monitor,1000);
+	}
+
+	/*秀出Q攻擊效果*/
+	function queenEffect(e){
+		if(e.getAttribute("title")!="x"){
+		e.innerHTML="Q";
+		countQ+=1;
+		e.setAttribute("title", "x");
+		countCell+=1;
+		var currpos = e.getAttribute("id");
+		var boardSize = tabObj.rows.length;
+		var tds = document.getElementsByTagName("TD");
+		
+		//將Q位置座標化
+		var xp = currpos%boardSize;
+		var yp = parseInt(currpos/boardSize);
+
+		//橫向效果
+		for(var v=0;v<boardSize;v++){
+			var start =yp*boardSize;
+			var index_v =start+v;
+			var check = tds[index_v].getAttribute("title");
+			if((index_v!=currpos)&&(check!="x")){
+				tds[index_v].innerHTML="*";
+				tds[index_v].setAttribute("title", "x");
+				countCell+=1;
+			}
+		}
+			
+		//縱向效果
+		for(var h=0;h<boardSize;h++){
+			var start =xp;
+			var index_h =start+h*boardSize;
+			var check = tds[index_h].getAttribute("title");
+			if((index_h!=currpos)&&(check!="x")){
+				tds[index_h].innerHTML="*";
+				tds[index_h].setAttribute("title", "x");
+				countCell+=1;
+			}
+		}
+		
+		//斜角效果
+		for(var a = 0;a<boardSize*boardSize;a++){
+			var check = tds[a].getAttribute("title");
+			var axp = a%boardSize;
+			var ayp = parseInt(a/boardSize);
+			var condition = Math.abs(axp-xp)==Math.abs(ayp-yp)?true:false;
+			if(condition&&check!="x"){
+				tds[a].innerHTML="*";
+				tds[a].setAttribute("title", "x");
+				countCell+=1;
+			}
+		}
+		//紀錄Q和格子數
+		spanObj[1].innerHTML=countQ;
+		spanObj[3].innerHTML=Math.pow(tabObj.rows.length,2)-countCell;
+		}else{
+			alert("此格不能再放!!");
+		}
+	}
+<!--遊戲的javascript 結束-->
+
+<!--圖片滑動的javascript 開始-->
+//源碼來自於w3c
+	var slideIndex = 0;
+	function showSlides() {
+		var i;
+		var slides = document.getElementsByClassName("mySlides");
+		var dots = document.getElementsByClassName("dot");
+		for (i = 0; i < slides.length; i++) {
+			slides[i].style.display = "none";
+		}
+		slideIndex++;
+		if (slideIndex> slides.length) {slideIndex = 1}
+		for (i = 0; i < dots.length; i++) {
+			dots[i].className = dots[i].className.replace(" active", "");
+		}
+		slides[slideIndex-1].style.display = "block";
+		dots[slideIndex-1].className += " active";
+		setTimeout(showSlides, 3000);
+	}
+<!--圖片滑動的javascript 結束-->
+	
+window.onload=init;
+</script>
+
+</head>
+<body>
+<p></p>
+<!--選單HTML-->
+<div id="opts" >
+	<span>Eight  Queen  Game<span>
+	<span>請選擇棋盤大小:<span>
+	<select id="choose">
+		<option value="7" >7    x    7</option>
+		<option value="8" >8    x    8</option>
+		<option value="9" >9    x    9</option>
+		<option value="10">10  x  10</option>
+	</select>
+	<button id="btn" onclick="creatBoard()">確定</button>
+	<span class="info">皇后數目:</span><span class="info">0 </span>
+	<span class="info">可選格數:</span><span class="info">0</span>
+</div>
+<br>
+<!--圖片滑動 HTML-->
+<div class="slideshow-container">
+	<div class="mySlides fade">
+		<div class="numbertext">1 / 3</div>
+		<img src="step_1.jpg" style="width:100%">
+		<div class="text">選擇棋盤大小後確定</div>
+	</div>
+	<div class="mySlides fade">
+		<div class="numbertext">2 / 3</div>
+		<img src="step_2.jpg" style="width:100%">
+		<div class="text">擺放過的格子不可再放</div>
+	</div>
+
+	<div class="mySlides fade">
+		<div class="numbertext">3 / 3</div>
+		<img src="step_3.jpg" style="width:100%">
+		<div class="text">自動重新遊戲</div>
+	</div>
+</div>
+<br>
+<div class="caption_text" style="text-align:center">
+	<span class="dot"></span>
+	<span class="dot"></span>
+	<span class="dot"></span>
+</div>
+<!--表格HTML-->
+<div id="showbox">
+<table id="board" align="center">
+</table>
+</div>
+</body>
+</html>
+
